@@ -1,0 +1,7 @@
+{
+  "log_filename": "port_scanner.log",
+  "log_level": "INFO",
+  "timeout": 1,
+  "max_retries": 3,
+  "workers": 10
+}
