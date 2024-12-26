@@ -1,5 +1,7 @@
 import socket
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+
 
 """Scan a single port on the target IP."""
 def scan_port(host, port):
@@ -27,34 +29,51 @@ def scan_port(host, port):
 def scan_port_range(host, start_port, end_port):
   
   open_ports = [] #storing the open ports
-  for port in range(start_port, end_port + 1): 
-        if scan_port(host, port):
-            open_ports.append(port)
-            print(f"Port {port} is OPEN")
+  with ThreadPoolExecutor(max_workers=10) as executor:  # Limit number of threads for performance
+        # Submitting scan tasks for each port in the range
+        futures = {executor.submit(scan_port, host, port): port for port in range(start_port, end_port + 1)}
+
+        for future in futures:
+            port = futures[future]
+            if future.result():
+                open_ports.append(port)
+                print(f"Port {port} is OPEN")
+            else:
+                print(f"Port {port} is CLOSED")
+    
   return open_ports
 
 """Scan a list of ports on the target IP.""" 
 def scan_ports(host, ports):
    
   open_ports = [] #storing the open ports
-  for port in ports:
-    if scan_port(host, port):
-      open_ports.append(port)
-      print(f"Port {port} is open")
-    else:
-      print(f"Port {port} is closed")
+  with ThreadPoolExecutor(max_workers=10) as executor:  # Limit number of threads for performance
+        futures = {executor.submit(scan_port, host, port): port for port in ports}
+
+        for future in futures:
+            port = futures[future]
+            if future.result():
+                open_ports.append(port)
+                print(f"Port {port} is OPEN")
+            else:
+                print(f"Port {port} is CLOSED")
+    
   return open_ports
 
 """Scan all ports on the target IP."""
 def scan_all_ports(host):
   
   open_ports = [] #storing the open ports
-  for port in range(1, 65536):  # Note: Port range is 1-65535
-        if scan_port(host, port):
-            open_ports.append(port)
-            print(f"Port {port} is OPEN")
-        else:
-            print(f"Port {port} is CLOSED")
+  with ThreadPoolExecutor(max_workers=10) as executor:  # Limit number of threads for performance
+        futures = {executor.submit(scan_port, host, port): port for port in range(1, 65536)}
+
+        for future in futures:
+            port = futures[future]
+            if future.result():
+                open_ports.append(port)
+                print(f"Port {port} is OPEN")
+            else:
+                print(f"Port {port} is CLOSED")
   return open_ports
 
 """Parse command-line arguments."""
